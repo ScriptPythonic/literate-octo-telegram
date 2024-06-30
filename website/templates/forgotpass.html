@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - College Exchange Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1a202c;
+        }
+        .form-input {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: #cbd5e0;
+        }
+        .form-input:focus {
+            border-color: #cbd5e0;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+        }
+        .btn {
+            background-color: #e53e3e;
+            color: #fff;
+        }
+        .btn:hover {
+            background-color: #c53030;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center h-screen">
+    <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-sm">
+        <h2 class="text-2xl font-semibold mb-6 text-center text-white">Forgot Password</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+         {% endif %}
+         {% endwith %}
+        <form action="#" method="POST">
+            <div class="mb-4">
+                <input type="text" id="matric-no" name="matric-no" placeholder="Matriculation Number" class="form-input py-2 px-4 rounded-md w-full">
+            </div>
+            <div class="mb-4">
+                <input type="text" id="phone-number" name="phone-number" placeholder="Phone Number" class="form-input py-2 px-4 rounded-md w-full">
+            </div>
+            <div class="mb-4">
+                <input type="password" id="new-password" name="new-password" placeholder="New Password" class="form-input py-2 px-4 rounded-md w-full">
+            </div>
+            <div class="mb-4">
+                <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" class="form-input py-2 px-4 rounded-md w-full">
+            </div>
+            <button type="submit" class="btn py-2 px-4 rounded-md w-full">Reset Password</button>
+        </form>
+        <div class="text-center mt-4">
+            <span class="text-gray-300">Remembered your password?</span> <a href="/login" class="text-blue-400 hover:text-blue-300">Login</a>
+        </div>
+    </div>
+</body>
+</html>

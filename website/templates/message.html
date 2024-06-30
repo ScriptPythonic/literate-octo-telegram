@@ -1,0 +1,87 @@
+{% extends "nav.html" %}
+{% block style %}
+<style>
+    .chat-bubble {
+        max-width: 75%;
+        padding: 10px;
+        border-radius: 15px;
+    }
+    .chat-bubble.sent {
+        background-color: #4a5568;
+        margin-left: auto;
+    }
+    .chat-bubble.received {
+        background-color: #2d3748;
+    }
+    .chat-container {
+        height: calc(100vh - 128px);
+        overflow-y: auto;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .chat-input {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        padding: 10px 20px;
+        background-color: #2d3748;
+        display: flex;
+        gap: 10px;
+    }
+    .chat-input input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 25px;
+        border: none;
+        outline: none;
+        background-color: #4a5568;
+        color: white;
+    }
+    .chat-input button {
+        padding: 10px 15px;
+        border-radius: 50%;
+        background-color: #4a5568;
+        color: white;
+        border: none;
+        outline: none;
+        cursor: pointer;
+    }
+    .chat-input button:hover {
+        background-color: #5a667d;
+    }
+</style>
+{% endblock style %}
+{% block content %}
+<section class="container mx-auto mt-20 p-8">
+    <h2 class="text-3xl font-semibold mb-6 text-center">Messages with {{ other_user.full_name }}</h2>
+    <div class="chat-container">
+        {% for message in messages %}
+        <div class="flex items-end {% if message.sender_id == current_user.id %}justify-end{% endif %}">
+            {% if message.sender_id != current_user.id %}
+            <img src="{{ other_user.picture }}" alt="{{ other_user.username }}" class="w-10 h-10 rounded-full mr-4">
+            {% endif %}
+            <div class="chat-bubble {% if message.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+                <p>{{ message.content }}</p>
+                <span class="text-gray-400 text-sm block">{{ message.timestamp.strftime('%B %d, %Y %H:%M') }}</span>
+            </div>
+            {% if message.sender_id == current_user.id %}
+            <img src="{{ current_user.picture }}" alt="{{ current_user.username }}" class="w-10 h-10 rounded-full ml-4">
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Chat Input Section -->
+<form action="{{ url_for('message.message_user', user_id=other_user.id) }}" method="POST" class="chat-input">
+    <input type="text" name="message_content" placeholder="Type a message...">
+    <button type="submit">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+    </button>
+</form>
+{% endblock content %}

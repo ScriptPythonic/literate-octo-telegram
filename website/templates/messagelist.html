@@ -1,0 +1,41 @@
+{% extends "nav.html" %}
+
+{% block style %}
+<style>
+    /* Custom styles */
+    .message-preview {
+        transition: background-color 0.2s;
+    }
+    .message-preview:hover {
+        background-color: #2d3748;
+    }
+</style>
+{% endblock style %}
+
+{% block content %}
+<section class="container mx-auto mt-20 p-8">
+    <h2 class="text-3xl font-semibold mb-6 text-center">Messages</h2>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+        <!-- Message Preview List -->
+        <div class="divide-y divide-gray-700">
+            {% if users %}
+                {% for user in users %}
+                <!-- Message Preview Item -->
+                <a href="{{ url_for('message.message_user', user_id=user.id) }}" class="block message-preview p-4 flex items-center">
+                    <img src="{{ user.picture }}" alt="{{ user.full_name }}" class="w-12 h-12 rounded-full mr-4">
+                    <div class="flex-grow">
+                        <div class="flex justify-between">
+                            <h3 class="text-xl font-semibold">{{ user.full_name }}</h3>
+                            <span class="text-gray-400 text-sm">View Messages</span>
+                        </div>
+                        <p class="text-gray-300">Click to view messages</p>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-400 text-center mt-6">You haven't received any messages for your products.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock content %}
