@@ -5,6 +5,7 @@ from .models import User,Upload
 from flask_login import login_required,current_user
 import cloudinary.uploader
 from sqlalchemy import or_,func
+from datetime import datetime
 
 views = Blueprint('views',__name__)
 
@@ -13,21 +14,7 @@ views = Blueprint('views',__name__)
 def index():
     return render_template("welcome.html")
 
-# @views.route('/messages', methods=['GET'])
-# @login_required
-# def messages():
-#     # Subquery to get the most recent timestamp for each user
-#     subquery = db.session.query(
-#         Message.sender_id,
-#         func.max(Message.timestamp).label('max_timestamp')
-#     ).filter(Message.receiver_id == current_user.id).group_by(Message.sender_id).subquery()
 
-#     # Fetch users with their most recent message timestamp, ordered by descending timestamp
-#     users = User.query.join(
-#         subquery, User.id == subquery.c.sender_id
-#     ).order_by(subquery.c.max_timestamp.desc())
-
-#     return render_template('messagelist.html', users=users)
 
 @views.route('/my-listings', methods=['GET', 'POST'])
 @login_required
@@ -57,37 +44,7 @@ def my_listings():
 def profile():
     return render_template('profile.html', user=current_user)
 
-# @views.route('/message/<int:user_id>', methods=['GET', 'POST'])
-# @login_required
-# def message_user(user_id):
-#     other_user = User.query.get_or_404(user_id)
 
-#     if other_user == current_user:
-#         flash("You cannot message yourself.", "error")
-#         return redirect(url_for('views.index'))  # Redirect to books listing or appropriate page
-
-#     if request.method == 'POST':
-#         message_content = request.form.get('message_content')
-
-#         if message_content:
-#             message = Message(
-#                 sender_id=current_user.id,
-#                 receiver_id=user_id,
-#                 content=message_content
-#             )
-#             db.session.add(message)
-#             db.session.commit()
-#             flash('Message sent successfully!', 'success')
-#             return redirect(url_for('message.message_user', user_id=user_id))
-#         else:
-#             flash('Message content cannot be empty.', 'error')
-
-#     messages = Message.query.filter(
-#         ((Message.sender_id == current_user.id) & (Message.receiver_id == user_id)) |
-#         ((Message.sender_id == user_id) & (Message.receiver_id == current_user.id))
-#     ).order_by(Message.timestamp.asc()).all()
-
-#     return render_template('message.html', messages=messages, other_user=other_user)
 
 
 @views.route('/upload', methods=['GET', 'POST'])
@@ -166,16 +123,17 @@ def forgot_password():
 def exchange():
     search_query = request.args.get('q', '')
 
-    # Query uploads with associated user information
+    # Query uploads with associated user information and filter by category
     if search_query:
         uploads = db.session.query(Upload, User).join(User).filter(
-            or_(Upload.title.ilike(f"%{search_query}%"), User.username.ilike(f"%{search_query}%"))
+            Upload.category.ilike(f"%{search_query}%"), User.username.ilike(f"%{search_query}%")
         ).all()
     else:
-        uploads = db.session.query(Upload, User).join(User).all()
+        uploads = db.session.query(Upload, User).join(User).filter(
+            Upload.category == "exchange"
+        ).all()
 
     return render_template('exchange.html', uploads=uploads, search_query=search_query)
-
 
 ########## THIS IS A ROUTE FOR THE BOOKS ############
 @views.route('/books', methods=['GET'])
@@ -266,3 +224,29 @@ def services():
         ).all()
 
     return render_template('services.html', uploads=uploads)
+
+@views.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    user = current_user
+
+    if request.method == 'POST':
+        user.full_name = request.form['full_name']
+        user.phone_number = request.form['phone_number']
+        user.address = request.form['address']
+        user.reg_officer_no = request.form['reg_officer_no']
+        user.department = request.form['department']
+        user.level = request.form['level']
+        user.bio = request.form['bio']
+        
+        if 'picture' in request.files:
+            picture = request.files['picture']
+            if picture:
+                upload_result = cloudinary.uploader.upload(picture)
+                user.picture = upload_result['secure_url']
+        
+        db.session.commit()
+        flash('Profile updated successfully.', 'success')
+        return redirect(url_for('views.profile'))
+
+    return render_template('settings.html', user=user)

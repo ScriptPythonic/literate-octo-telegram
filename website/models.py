@@ -1,40 +1,50 @@
-from . import db
-from flask_login import UserMixin
-from datetime import datetime
+from .mongo import users_collection, uploads_collection, messages_collection
+from datetime import datetime, timedelta
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    matric_no = db.Column(db.String(100), unique=True, nullable=False)
-    full_name = db.Column(db.String(100), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-    picture = db.Column(db.String(255), default='https://th.bing.com/th/id/R.d8be3ebdc1ed3c6b13ffbeee0b20fa3c?rik=h%2bwbaNZzYT67Gg&pid=ImgRaw&r=0')
-    is_active = db.Column(db.Boolean, default=True)
-    
-    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender', lazy=True)
-    received_messages = db.relationship('Message', foreign_keys='Message.receiver_id', backref='receiver', lazy=True)
+class User:
+    def __init__(self, matric_no, full_name, phone_number, email, password, picture=None, address=None, reg_officer_no=None, department=None, level=None, last_update=None, is_active=True):
+        self.matric_no = matric_no
+        self.full_name = full_name
+        self.phone_number = phone_number
+        self.email = email
+        self.password = password
+        self.picture = picture or 'https://th.bing.com/th/id/R.d8be3ebdc1ed3c6b13ffbeee0b20fa3c?rik=h%2bwbaNZzYT67Gg&pid=ImgRaw&r=0'
+        self.address = address
+        self.reg_officer_no = reg_officer_no
+        self.department = department
+        self.level = level
+        self.last_update = last_update or datetime.utcnow()
+        self.is_active = is_active
 
+    def save(self):
+        return users_collection.insert_one(self.__dict__)
 
-    def __repr__(self):
-        return f'<User {self.full_name}>'
+    @staticmethod
+    def find_by_email(email):
+        return users_collection.find_one({'email': email})
 
-class Upload(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(50), nullable=False)
-    file_url = db.Column(db.String(300), nullable=False)  
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    def can_update_profile(self):
+        if self.last_update is None:
+            return True
+        return datetime.utcnow() >= self.last_update + timedelta(weeks=1)
 
-    user = db.relationship('User', backref=db.backref('uploads', lazy=True))
+class Upload:
+    def __init__(self, title, description, category, file_url, user_id):
+        self.title = title
+        self.description = description
+        self.category = category
+        self.file_url = file_url
+        self.user_id = user_id
 
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    def save(self):
+        return uploads_collection.insert_one(self.__dict__)
 
-    def __repr__(self):
-        return f"<Message sender_id={self.sender_id}, receiver_id={self.receiver_id}, content='{self.content[:50]}', timestamp={self.timestamp}>"
+class Message:
+    def __init__(self, sender_id, receiver_id, content, timestamp=None):
+        self.sender_id = sender_id
+        self.receiver_id = receiver_id
+        self.content = content
+        self.timestamp = timestamp or datetime.utcnow()
+
+    def save(self):
+        return messages_collection.insert_one(self.__dict__)
